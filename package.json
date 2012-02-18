@@ -1,0 +1,10 @@
+{
+    "name": "dev-env"
+	, "author": "xiaoyi"
+  , "version": "0.0.4"
+  , "private": true
+  , "dependencies": {
+      "less": ">= 1.2"
+    , "jade": ">= 0.2"
+  }
+}
