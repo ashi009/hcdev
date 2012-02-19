@@ -33,12 +33,16 @@ var renders = {};
 
 const handled = {
   less: function(file, name, ext) {
-    less.render(fs.readFileSync(file).toString(), function(e, css) {
-      if (e)
-        console.log('less error:', e);
-      else
-        fs.writeFileSync(name + '.css', css);
-    });
+    try {
+      less.render(fs.readFileSync(file).toString(), function(e, css) {
+        if (e)
+          console.log('less error:', e);
+        else
+          fs.writeFileSync(name + '.css', css);
+      });
+    } catch(e) {
+      console.log('less error:', e);
+    }
     return true;
   },
   jade: function(file, name, ext) {
