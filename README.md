@@ -1,6 +1,6 @@
 Usage:
 
-    node watcher.js basePath [--pjs-watch path]+ [--pjs args..]
+    node watcher.js basePath [--minify] [--pjs-watch path] [...] [--pjs args..]
 
   - `basePath` Specify a folder to watch changes.
   - `--minify` Specify whether to minify CSS output.

@@ -1,6 +1,6 @@
 if (process.argv.length == 2) {
   console.log('\
-Usage: node watcher.js basePath [--pjs-watch path]+ [--pjs args..]\n\n\
+Usage: node watcher.js basePath [--minify] [--pjs-watch path] [...] [--pjs args..]\n\n\
     basePath     Specify a folder to watch changes.\n\
     --minify     Specify whether to minify CSS output.\n\
     --pjs-watch  When files inside path update, regenerate .pjs in basePath.\n\
