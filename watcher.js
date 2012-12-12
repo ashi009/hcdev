@@ -2,6 +2,7 @@ if (process.argv.length == 2) {
   console.log('\
 Usage: node watcher.js basePath [--pjs-watch path]+ [--pjs args..]\n\n\
     basePath     Specify a folder to watch changes.\n\
+    --minify     Specify whether to minify CSS output.\n\
     --pjs-watch  When files inside path update, regenerate .pjs in basePath.\n\
     --pjs        All arguments following are forwarded to cpp.\n\n\
    eg. node watcher.js ./doc/ --pjs-watch inc/ --pjs -D DEBUG\n\
@@ -17,12 +18,14 @@ var fs = require('fs'),
     jade = require('jade'),
     cprc = require('child_process');
 
+var minify = process.argv.indexOf('--minify') > -1;
+
 var pjsAlsoWatch = process.argv.filter(function(v, idx, arr) {
   if (idx > 1 && arr[idx - 1] == '--pjs-watch')
     return true;
   return false;
 });
-    
+
 var pjsArgs = '-P -C -w -undef -nostdinc -imacros macro.inc'.split(' ');
 var pjsArgsFrom = process.argv.indexOf('--pjs');
 if (pjsArgsFrom > -1) while (++pjsArgsFrom < process.argv.length)
@@ -33,12 +36,18 @@ var renders = {};
 
 const handled = {
   less: function(file, name, ext) {
+    var parser = new less.Parser({
+      paths: [path.dirname(file)],
+      filename: path.basename(file)
+    });
     try {
-      less.render(fs.readFileSync(file).toString(), function(e, css) {
+      parser.parse(fs.readFileSync(file).toString(), function(e, tree) {
         if (e)
           console.log('less error:', e);
         else
-          fs.writeFileSync(name + '.css', css);
+          fs.writeFileSync(name + '.css', tree.toCSS({
+            compress: minify
+          }));
       });
     } catch(e) {
       console.log('less error:', e);
@@ -61,7 +70,7 @@ const handled = {
       var json = fs.readFileSync(file).toString();
       try {
         data = JSON.parse(json);
-      } catch(e) { 
+      } catch(e) {
         console.log('json error:', e);
       }
     }
