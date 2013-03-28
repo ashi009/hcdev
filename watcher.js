@@ -56,7 +56,9 @@ const handled = {
   },
   jade: function(file, name, ext) {
     try {
-      renders[name] = jade.compile(fs.readFileSync(file).toString());
+      renders[name] = jade.compile(fs.readFileSync(file).toString(), {
+        filename: file
+      });
     } catch(e) {
       console.log('jade error:', e);
       return false;
