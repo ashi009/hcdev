@@ -67,11 +67,18 @@ const handled = {
     return true;
   },
   json: function(file, name, ext) {
-    var data = {};
-    if (path.existsSync(file)) {
+    var data = {
+      FILE: file,
+      BASENAME: path.basename(name),
+      NAME: name
+    };
+    if (fs.existsSync(file)) {
       var json = fs.readFileSync(file).toString();
       try {
-        data = JSON.parse(json);
+        json = JSON.parse(json);
+        for (var key in json) {
+          data[key] = json[key];
+        }
       } catch(e) {
         console.log('json error:', e);
       }
