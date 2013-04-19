@@ -78,7 +78,11 @@ const handled = {
     }
     if (!renders[name])
       return false;
-    fs.writeFileSync(name + '.html', renders[name](data));
+    try {
+      fs.writeFileSync(name + '.html', renders[name](data));
+    } catch(e) {
+      console.log('jade error:', e);
+    }
     return true;
   },
   pjs: function(file, name, ext) {
