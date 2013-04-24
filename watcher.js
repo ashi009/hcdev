@@ -85,16 +85,17 @@ var handled = {
         return false;
       }
     }
+    var dir = path.dirname(file) + '/';
     function renderPage(pageName, locals) {
       var pageInfo = {
         FILE: file,
-        BASENAME: path.basename(pageName),
-        NAME: pageName + '.json'
+        BASENAME: pageName,
+        NAME: dir + pageName + '.json'
       };
       for (var key in pageInfo) if (!locals.hasOwnProperty(key))
         locals[key] = pageInfo[key];
       try {
-        fs.writeFileSync(pageName + '.html', renders[name](locals));
+        fs.writeFileSync(dir + pageName + '.html', renders[name](locals));
       } catch(e) {
         console.log('jade error:', e);
       }
@@ -103,7 +104,7 @@ var handled = {
       for (var pageName in json.__multiple)
         renderPage(pageName, json.__multiple[pageName]);
     } else {
-      renderPage(name, json);
+      renderPage(path.basename(name), json);
     }
     return true;
   },
