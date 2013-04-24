@@ -1,7 +1,8 @@
 if (process.argv.length == 2) {
   console.log('\
-Usage: node watcher.js basePath [--minify] [--pjs-watch path] [...] [--pjs args..]\n\n\
+Usage: node watcher.js basePath [path...] [--minify] [--pjs-watch path...] [--pjs args..]\n\n\
     basePath     Specify a folder to watch changes.\n\
+    path         Specify other folders to watch changes.\n\
     --minify     Specify whether to minify CSS output.\n\
     --pjs-watch  When files inside path update, regenerate .pjs in basePath.\n\
     --pjs        All arguments following are forwarded to cpp.\n\n\
@@ -10,7 +11,12 @@ Usage: node watcher.js basePath [--minify] [--pjs-watch path] [...] [--pjs args.
   process.exit(-1);
 }
 
-const kBasePath = process.argv[2];
+var pathes = [];
+
+process.argv.splice(0, 2);
+do {
+  pathes.push(process.argv.shift());
+} while (process.argv.length > 0 && process.argv[0].indexOf('--') == -1);
 
 var fs = require('fs'),
     path = require('path'),
@@ -34,7 +40,7 @@ if (pjsArgsFrom > -1) while (++pjsArgsFrom < process.argv.length)
 var mtime = {};
 var renders = {};
 
-const handled = {
+var handled = {
   less: function(file, name, ext) {
     var parser = new less.Parser({
       paths: [path.dirname(file)],
@@ -116,17 +122,20 @@ function check(file, enabledSet) {
   }
 }
 
-fs.readdirSync(kBasePath).forEach(function(file) {
-  check(kBasePath + file, {
-    jade: true,
-    pjs: true
+pathes.forEach(function(path) {
+  fs.readdirSync(path).forEach(function(file) {
+    check(path + file, {
+      jade: true,
+      pjs: true
+    });
+  });
+  fs.watch(path, function(evtype, file) {
+    if (evtype == 'change' && file)
+      check(path + file, handled);
   });
 });
 
-fs.watch(kBasePath, function(evtype, file) {
-  if (evtype == 'change' && file)
-    check(kBasePath + file, handled);
-});
+var kBasePath = pathes[0];
 
 pjsAlsoWatch.forEach(function(path) {
   fs.watch(kBasePath + path, function(evtype, file) {
