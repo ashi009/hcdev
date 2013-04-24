@@ -73,28 +73,37 @@ var handled = {
     return true;
   },
   json: function(file, name, ext) {
-    var data = {
-      FILE: file,
-      BASENAME: path.basename(name),
-      NAME: name
-    };
-    if (fs.existsSync(file)) {
-      var json = fs.readFileSync(file).toString();
-      try {
-        json = JSON.parse(json);
-        for (var key in json) {
-          data[key] = json[key];
-        }
-      } catch(e) {
-        console.log('json error:', e);
-      }
-    }
     if (!renders[name])
       return false;
-    try {
-      fs.writeFileSync(name + '.html', renders[name](data));
-    } catch(e) {
-      console.log('jade error:', e);
+    var json;
+    if (fs.existsSync(file)) {
+      json = fs.readFileSync(file).toString();
+      try {
+        json = JSON.parse(json);
+      } catch(e) {
+        console.log('json error:', e);
+        return false;
+      }
+    }
+    function renderPage(pageName, locals) {
+      var pageInfo = {
+        FILE: file,
+        BASENAME: path.basename(pageName),
+        NAME: pageName + '.json'
+      };
+      for (var key in pageInfo) if (!locals.hasOwnProperty(key))
+        locals[key] = pageInfo[key];
+      try {
+        fs.writeFileSync(pageName + '.html', renders[name](locals));
+      } catch(e) {
+        console.log('jade error:', e);
+      }
+    }
+    if (json.__multiple) {
+      for (var pageName in json.__multiple)
+        renderPage(pageName, json.__multiple[pageName]);
+    } else {
+      renderPage(name, json);
     }
     return true;
   },
