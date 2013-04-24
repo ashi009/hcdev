@@ -126,6 +126,7 @@ pathes.forEach(function(path) {
   fs.readdirSync(path).forEach(function(file) {
     check(path + file, {
       jade: true,
+      less: true,
       pjs: true
     });
   });
