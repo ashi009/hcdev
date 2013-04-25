@@ -1,3 +1,28 @@
+function $extend(obj, ext, override, deep) {
+  if (override)
+    if (deep)
+      (function rdext(obj, ext) {
+        for (var key in ext)
+          if (obj[key] instanceof Object)
+            rdext(obj[key], ext[key]);
+      })(obj, ext);
+    else
+      for (var key in ext)
+        obj[key] = ext[key];
+  else
+    if (deep)
+      (function dext(obj, ext) {
+        for (var key in ext)
+          if (!(key in obj))
+            if (obj[key] instanceof Object)
+              rdext(obj[key], ext[key]);
+      })(obj, ext);
+    else
+      for (var key in ext)
+        if (!(key in obj))
+          obj[key] = ext[key];
+}
+
 if (process.argv.length == 2) {
   console.log('\
 Usage: node watcher.js basePath [path...] [--minify] [--pjs-watch path...] [--pjs args..]\n\n\
@@ -87,13 +112,16 @@ var handled = {
     }
     var dir = path.dirname(file) + '/';
     function renderPage(pageName, locals) {
+      if (locals.__output)
+        pageName = fs.basename(locals.__output);
       var pageInfo = {
         FILE: file,
-        BASENAME: pageName,
+        BASENAME: path.basename(pageName),
         NAME: dir + pageName + '.json'
       };
-      for (var key in pageInfo) if (!locals.hasOwnProperty(key))
-        locals[key] = pageInfo[key];
+      $extend(locals, pageInfo);
+      if (json.__data)
+        $extend(locals, json.__data, false, true);
       try {
         fs.writeFileSync(dir + pageName + '.html', renders[name](locals));
       } catch(e) {
@@ -104,7 +132,7 @@ var handled = {
       for (var pageName in json.__multiple)
         renderPage(pageName, json.__multiple[pageName]);
     } else {
-      renderPage(path.basename(name), json);
+      renderPage(name, json);
     }
     return true;
   },
