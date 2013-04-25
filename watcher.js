@@ -123,7 +123,7 @@ var handled = {
       if (json.__data)
         $extend(locals, json.__data, false, true);
       try {
-        fs.writeFileSync(dir + pageName + '.html', renders[name](locals));
+        fs.writeFileSync(path.resolve(dir, pageName + '.html'), renders[name](locals));
       } catch(e) {
         console.log('jade error:', e);
       }
