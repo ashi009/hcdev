@@ -123,14 +123,14 @@ var handled = {
       if (json.__data)
         $extend(locals, json.__data, false, true);
       try {
-        fs.writeFileSync(path.resolve(dir, pageName + '.html'), renders[name](locals));
+        fs.writeFileSync(pageName + '.html', renders[name](locals));
       } catch(e) {
         console.log('jade error:', e);
       }
     }
     if (json.__multiple) {
       for (var pageName in json.__multiple)
-        renderPage(pageName, json.__multiple[pageName]);
+        renderPage(dir + pageName, json.__multiple[pageName]);
     } else {
       renderPage(name, json);
     }
