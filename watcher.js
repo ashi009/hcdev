@@ -73,12 +73,17 @@ var handled = {
     });
     try {
       parser.parse(fs.readFileSync(file).toString(), function(e, tree) {
-        if (e)
+        if (e) {
           console.log('less error:', e);
-        else
-          fs.writeFileSync(name + '.css', tree.toCSS({
-            compress: minify
-          }));
+        } else {
+          try {
+            fs.writeFileSync(name + '.css', tree.toCSS({
+              compress: minify
+            }));
+          } catch(e2) {
+            console.log('less error:', e2);
+          }
+        }
       });
     } catch(e) {
       console.log('less error:', e);
