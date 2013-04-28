@@ -105,7 +105,7 @@ var handled = {
   json: function(file, name, ext) {
     if (!renders[name])
       return false;
-    var json;
+    var json = {};
     if (fs.existsSync(file)) {
       json = fs.readFileSync(file).toString();
       try {
@@ -133,7 +133,7 @@ var handled = {
         console.log('jade error:', e);
       }
     }
-    if (json.__multiple) {
+    if (json && json.__multiple) {
       for (var pageName in json.__multiple)
         renderPage(dir + pageName, json.__multiple[pageName]);
     } else {
