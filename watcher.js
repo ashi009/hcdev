@@ -116,8 +116,6 @@ var handled = {
       }
     }
     var dir = path.dirname(file) + '/';
-
-
     function renderPage(pageName, locals) {
       if (locals.__output)
         pageName = fs.basename(locals.__output);
@@ -136,9 +134,8 @@ var handled = {
             console.log('lang error:', e);
           }
         }
-        locals['lang'] = lang;
+        locals.lang = lang;
       }
-      console.log(locals);
       if (json.__data)
         $extend(locals, json.__data, false, true);
       try {
