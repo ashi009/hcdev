@@ -125,6 +125,17 @@ var handled = {
         NAME: dir + pageName + '.json'
       };
       $extend(locals, pageInfo);
+      if (json && json.__lang) {
+        var lang = {};
+        for (var locale in json.__lang) {
+          try {
+            lang[locale] =  JSON.parse(fs.readFileSync(dir + json.__lang[locale]));
+          } catch(e) {
+            console.log('lang error:', e);
+          }
+        }
+        locals.lang = lang;
+      }
       if (json.__data)
         $extend(locals, json.__data, false, true);
       try {
