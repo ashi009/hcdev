@@ -1,26 +1,35 @@
 function $extend(obj, ext, override, deep) {
-  if (override)
+  var key;
+  if (override) {
     if (deep)
-      (function rdext(obj, ext) {
-        for (var key in ext)
-          if (obj[key] instanceof Object)
-            rdext(obj[key], ext[key]);
-      })(obj, ext);
+      _overrideDeepExtend(obj, ext);
     else
-      for (var key in ext)
+      for (key in ext)
         obj[key] = ext[key];
-  else
+  } else {
     if (deep)
-      (function dext(obj, ext) {
-        for (var key in ext)
-          if (!(key in obj))
-            if (obj[key] instanceof Object)
-              rdext(obj[key], ext[key]);
-      })(obj, ext);
+      _deepExtend(obj, ext);
     else
-      for (var key in ext)
+      for (key in ext)
         if (!(key in obj))
           obj[key] = ext[key];
+  }
+  return obj;
+}
+
+function _overrideDeepExtend(obj, ext) {
+  for (var key in ext)
+    if (Object.isObjectStrict(obj[key]) && Object.isObjectStrict(ext[key]))
+      _overrideDeepExtend(obj[key], ext[key]);
+    else
+      obj[key] = ext[key];
+}
+
+function _deepExtend(obj, ext) {
+  for (var key in ext)
+    if (!(key in obj)) {
+      obj[key] = ext[key];
+    }
 }
 
 if (process.argv.length == 2) {
@@ -107,50 +116,69 @@ var handled = {
       return false;
     var json = {};
     if (fs.existsSync(file)) {
-      json = fs.readFileSync(file).toString();
       try {
-        json = JSON.parse(json);
+        json = eval('(' + fs.readFileSync(file).toString() + ')');
       } catch(e) {
         console.log('json error:', e);
         return false;
       }
     }
     var dir = path.dirname(file) + '/';
+    var lang = null;
+    if (json && json.__lang) {
+      lang = {};
+      for (var locale in json.__lang) {
+        try {
+          lang[locale] = eval('(' +
+              fs.readFileSync(dir + json.__lang[locale]).toString() + ')');
+        } catch(e) {
+          console.log('lang error:', e);
+        }
+      }
+    }
+    if (json && json.__multiple) {
+      for (var pageName in json.__multiple)
+        renderPage(pageName, json.__multiple[pageName]);
+    } else {
+      renderPage(name, json);
+    }
+    return true;
     function renderPage(pageName, locals) {
       if (locals.__output)
-        pageName = fs.basename(locals.__output);
+        pageName = path.basename(locals.__output);
       var pageInfo = {
         FILE: file,
         BASENAME: path.basename(pageName),
         NAME: dir + pageName + '.json'
       };
       $extend(locals, pageInfo);
-      if (json && json.__lang) {
-        var lang = {};
-        for (var locale in json.__lang) {
-          try {
-            lang[locale] =  JSON.parse(fs.readFileSync(dir + json.__lang[locale]));
-          } catch(e) {
-            console.log('lang error:', e);
-          }
-        }
-        locals.lang = lang;
-      }
       if (json.__data)
         $extend(locals, json.__data, false, true);
+      if (!lang) {
+        renderSinglePage(pageName, locals);
+      } else {
+        var namePattern = json.__l18nPageName || '%pageName.%locale';
+        for (var locale in lang) {
+          locals.locale = locale;
+          locals.lang = lang[locale];
+          renderSinglePage(namePattern.replace(/%([a-z]+)/ig, function(all, name) {
+            if (name == 'pageName')
+              return pageName;
+            if (name == 'locale')
+              return locale;
+            return '';
+          }), locals);
+        }
+      }
+    }
+    function renderSinglePage(fileName, locals) {
       try {
-        fs.writeFileSync(pageName + '.html', renders[name](locals));
+        fs.writeFileSync((json.__outputRoot || dir) + fileName + '.html',
+            renders[name](locals));
       } catch(e) {
         console.log('jade error:', e);
       }
     }
-    if (json && json.__multiple) {
-      for (var pageName in json.__multiple)
-        renderPage(dir + pageName, json.__multiple[pageName]);
-    } else {
-      renderPage(name, json);
-    }
-    return true;
   },
   pjs: function(file, name, ext) {
     var cpp = cprc.spawn('cpp', pjsArgs.concat([file, '-o', name + '.js']), {
