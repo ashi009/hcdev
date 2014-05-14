@@ -173,7 +173,7 @@ var handled = {
     }
     function renderSinglePage(fileName, locals) {
       try {
-        fs.writeFileSync((json.__outputRoot || dir) + fileName + '.html',
+        fs.writeFileSync((json.__outputRoot || dir) + fileName + '.' + (json.__outputExt || 'html'),
             renders[name](locals));
       } catch(e) {
         console.log('jade error:', e);
